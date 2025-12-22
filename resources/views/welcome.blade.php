@@ -418,7 +418,7 @@
                     </div>
                     <div class="tab-content active" id="nfl-run">
                         <button class="btn btn-run" onclick="openNflModal()">Results Scraping</button>
-                        <a class="btn btn-run" href="?page=run-nfl-bets">Bets Scraping</a>
+                        <a class="btn btn-run" href="{{ url('/scrape-bets/nfl') }}">Bets Scraping</a>
                     </div>
                     <div class="tab-content" id="nfl-results">
                         <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}">Results</a>
@@ -439,7 +439,7 @@
                     </div>
                     <div class="tab-content active" id="ncaaf-run">
                         <button class="btn btn-run" onclick="openNcaafModal()">Results Scraping</button>
-                        <a class="btn btn-run" href="?page=run-ncaaf-bets">Bets Scraping</a>
+                        <a class="btn btn-run" href="{{ url('/scrape-bets/ncaaf') }}">Bets Scraping</a>
                     </div>
                     <div class="tab-content" id="ncaaf-results">
                         <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}">Results</a>
@@ -459,9 +459,9 @@
                         <button class="tab" data-tab="ncaab-results">Results</button>
                     </div>
                     <div class="tab-content active" id="ncaab-run">
-                        <button class="btn btn-run" onclick="openDateModal('run-ncaab-results', 'NCAAB')">Results
+                        <button class="btn btn-run" onclick="openDateModal('ncaab', 'NCAAB')">Results
                             Scraping</button>
-                        <a class="btn btn-run" href="?page=run-ncaab-bets">Bets Scraping</a>
+                        <a class="btn btn-run" href="{{ url('/scrape-bets/ncaab') }}">Bets Scraping</a>
                     </div>
                     <div class="tab-content" id="ncaab-results">
                         <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}">Results</a>
@@ -572,7 +572,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
         function confirmDate() {
             const date = document.getElementById('scrapingDate').value;
             if (date) {
-                window.location.href = '?page=' + currentScraperPage + '&date=' + date;
+                window.location.href = '/scrape-results/' + currentScraperPage + '?date=' + date;
             }
         }
 
@@ -595,7 +595,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             const year = document.getElementById('nflYear').value;
             const week = document.getElementById('nflWeek').value;
             if (year && week) {
-                window.location.href = '?page=run-nfl-results&year=' + year + '&week=' + week;
+                window.location.href = '/scrape-results/nfl?year=' + year + '&week=' + week;
             }
         }
 
@@ -647,7 +647,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             const year = document.getElementById('ncaafYear').value;
             const week = document.getElementById('ncaafWeek').value;
             if (year && week) {
-                window.location.href = '?page=run-ncaaf-results&year=' + year + '&week=' + week;
+                window.location.href = '/scrape-results/ncaaf?year=' + year + '&week=' + week;
             }
         }
 

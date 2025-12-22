@@ -103,9 +103,13 @@ class ScrapeController extends Controller
 
     public function scrapeResults(Request $request, PageFetchService $pageFetchService)
     {
-        echo $request['game'];
-        //Hardcoded for testing purposes
-        $url = "https://www.scoresandodds.com/" . $request['game'];
+        $year = $request->query('year');
+        $week = $request->query('week');
+
+
+        //Format https://www.scoresandodds.com/nfl?week=2025-reg-15
+
+        $url = "https://www.scoresandodds.com/" . $request['game'] . "?week=" . $year . "-reg-" . $week;
         $page = $pageFetchService->fetchPageContent($url);
 
         if (!$page) {
@@ -169,33 +173,20 @@ class ScrapeController extends Controller
             $homeScoreNode = $cardXpath->query('.//td[contains(@class,"event-card-score")]', $homeRow)->item(0);
             $homeScore = $homeScoreNode ? trim($homeScoreNode->textContent) : '0';
 
-            $winningSpread = '';
-            $awaySpreadTd = $cardXpath->query('.//td[@data-field="live-spread" and @data-side="away" and contains(@class,"win")]', $awayRow)->item(0);
-            $homeSpreadTd = $cardXpath->query('.//td[@data-field="live-spread" and @data-side="home" and contains(@class,"win")]', $homeRow)->item(0);
+            // $winningSpread = '';
+            $winningSpreadNodeAway = $cardXpath->query('(.//td[@data-field="live-spread" and contains(@class,"win")]/*)[1]', $awayRow)->item(0);
+            $winningSpreadNodeHome = $cardXpath->query('(.//td[@data-field="live-spread" and contains(@class,"win")]/*)[1]', $homeRow)->item(0);
 
-            $winningSide = null; // 'away' or 'home'
-            if ($awaySpreadTd) {
-                $spreadValueNode = $cardXpath->query('.//span[@class="data-value"]', $awaySpreadTd)->item(0);
-                if ($spreadValueNode) {
-                    $winningSpread = trim($spreadValueNode->textContent);
-                    $winningSide = 'away';
-                }
-            } elseif ($homeSpreadTd) {
-                $spreadValueNode = $cardXpath->query('.//span[@class="data-value"]', $homeSpreadTd)->item(0);
-                if ($spreadValueNode) {
-                    $winningSpread = trim($spreadValueNode->textContent);
-                    $winningSide = 'home';
+            $winningSpread = null;
+
+            foreach ([$winningSpreadNodeAway, $winningSpreadNodeHome] as $node) {
+                if ($node && trim($node->textContent) !== '') {
+                    $winningSpread = trim($node->textContent);
+                    break;
                 }
             }
 
-            // Persist to nfl_results table using NFLResults model
-            $winningSpreadFloat = null;
-            if ($winningSpread !== '') {
-                $normalized = str_replace('+', '', $winningSpread);
-                if (is_numeric($normalized)) {
-                    $winningSpreadFloat = floatval($normalized);
-                }
-            }
+            $winningSpread ??= '0';
 
             $attributes = [
                 'game_date' => $date,
@@ -205,13 +196,9 @@ class ScrapeController extends Controller
             ];
 
             $values = [
-                // reset spreads to null and set the winning side spread when available
-                'spread_left' => $winningSide === 'away' ? $winningSpreadFloat : null,
-                'spread_right' => $winningSide === 'home' ? $winningSpreadFloat : null,
-                'perc_bets_left' => null,
-                'perc_bets_right' => null,
-                'perc_money_left' => null,
-                'perc_money_right' => null,
+                'score_left' => $awayScore,
+                'score_right' => $homeScore,
+                'winning_spread' => $winningSpread,
             ];
 
             NFLResults::updateOrCreate($attributes, $values);

@@ -18,12 +18,13 @@ return new class extends Migration
             $table->time('game_time');
             $table->string('team_left');
             $table->string('team_right');
-            $table->float('spread_left')->nullable();
-            $table->float('spread_right')->nullable();
-            $table->integer('perc_bets_left')->nullable();
-            $table->integer('perc_bets_right')->nullable();
-            $table->integer('perc_money_left')->nullable();
-            $table->integer('perc_money_right')->nullable();
+            $table->string('score_left')->nullable();
+            $table->string('score_right')->nullable();
+            $table->string('winning_spread')->nullable();
+            // $table->integer('perc_bets_left')->nullable();
+            // $table->integer('perc_bets_right')->nullable();
+            // $table->integer('perc_money_left')->nullable();
+            // $table->integer('perc_money_right')->nullable();
         }); 
     }
 

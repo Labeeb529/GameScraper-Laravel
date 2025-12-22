@@ -258,9 +258,12 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.6;
             }
@@ -444,33 +447,59 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Team Left</th>
-                                    <th>Spread Left</th>
-                                    <th>Team Right</th>
-                                    <th>Spread Right</th>
-                                    <th>% Bets Left</th>
-                                    <th>% Bets Right</th>
-                                    <th>% Money Left</th>
-                                    <th>% Money Right</th>
+                                    @if($type == 'results')
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Team Left</th>
+                                        <th>Score Left</th>
+                                        <th>Team Right</th>
+                                        <th>Score Right</th>
+                                        <th>Winning Spread</th>
+                                    @else
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Team Left</th>
+                                        <th>Spread Left</th>
+                                        <th>% Bets Left</th>
+                                        <th>% Money Left</th>
+                                        <th>Team Right</th>
+                                        <th>Spread Right</th>
+                                        <th>% Bets Right</th>
+                                        <th>% Money Right</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($data as $result)
-                                    <tr>
-                                        <td>{{ \Carbon\Carbon::parse($result->game_date)->format('M d, Y') }}</td>
-                                        <td>{{ $result->game_time }}</td>
-                                        <td class="team-cell">{{ $result->team_left }}</td>
-                                        <td class="score">{{ $result->spread_left !== null ? $result->spread_left : '-' }}</td>
-                                        <td class="team-cell">{{ $result->team_right }}</td>
-                                        <td class="score">{{ $result->spread_right !== null ? $result->spread_right : '-' }}</td>
-                                        <td>{{ $result->perc_bets_left !== null ? $result->perc_bets_left . '%' : '-' }}</td>
-                                        <td>{{ $result->perc_bets_right !== null ? $result->perc_bets_right . '%' : '-' }}</td>
-                                        <td>{{ $result->perc_money_left !== null ? $result->perc_money_left . '%' : '-' }}</td>
-                                        <td>{{ $result->perc_money_right !== null ? $result->perc_money_right . '%' : '-' }}</td>
-                                    </tr>
-                                @endforeach
+                                @if($type == 'results')
+                                    @foreach($data as $result)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::parse($result->game_date)->format('M d, Y') }}</td>
+                                            <td>{{ $result->game_time }}</td>
+                                            <td class="team-cell">{{ $result->team_left }}</td>
+                                            <td class="score">{{ $result->score_left !== null ? $result->score_left : '-' }}</td>
+                                            <td class="team-cell">{{ $result->team_right }}</td>
+                                            <td class="score">{{ $result->score_right !== null ? $result->score_right : '-' }}</td>
+                                            <td>{{ $result->winning_spread !== null ? $result->winning_spread : '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    @foreach($data as $result)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::parse($result->game_date)->format('M d, Y') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($result->game_time)->format('h:i A') }}</td>
+
+                                            <td class="team-cell">{{ $result->team_left }}</td>
+                                            <td>{{ $result->spread_left ?? '-' }}</td>
+                                            <td>{{ $result->perc_bets_left ?? '-' }}</td>
+                                            <td>{{ $result->perc_money_left ?? '-' }}</td>
+
+                                            <td class="team-cell">{{ $result->team_right }}</td>
+                                            <td>{{ $result->spread_right ?? '-' }}</td>
+                                            <td>{{ $result->perc_bets_right ?? '-' }}</td>
+                                            <td>{{ $result->perc_money_right ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     @endif
