@@ -10,12 +10,8 @@ class DataController extends Controller
 {
     public function getData(Game $game, GameDataType $type)
     {
-        // $type = $request['type'];
-        // $game = $request['game'];
-        // dd($game, $type);
-
         $model = $game->getModel($type);
-        $data = $model->latest()->paginate(100);
+        $data = $model::latest()->paginate(100);
         // dd($data);
         return view('data', [
             'game' => $game->value,

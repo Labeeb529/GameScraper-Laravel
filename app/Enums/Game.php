@@ -27,6 +27,6 @@ enum Game: string
 
     public function getModel(GameDataType $type)
     {
-        return app($this->getModelClass($type));
+        return $this->getModelClass($type);
     }
 }

@@ -10,11 +10,16 @@ use App\Models\NFLBets;
 use App\Models\NFLResults;
 use DateTime;
 use DateTimeZone;
+use App\Enums\Game;
+use App\Enums\GameDataType;
 
 class ScrapeController extends Controller
 {
     public function scrapeBets(Request $request, PageFetchService $pageFetchService)
     {
+        $game = Game::from($request['game']);
+        $type = GameDataType::Bets;
+
         echo $request['game'];
         //Hardcoded for testing purposes
         $url = "https://www.scoresandodds.com/" . $request['game'] . "/consensus-picks";
@@ -79,37 +84,53 @@ class ScrapeController extends Controller
             $spreadA = preg_replace('/\s+/', ' ', trim($strongNodes->length > 0 ? $strongNodes->item(0)->nodeValue : ''));
             $spreadB = preg_replace('/\s+/', ' ', trim($strongNodes->length > 1 ? $strongNodes->item(1)->nodeValue : ''));
 
+            //Select the model based on the game and type
+            $model = $game->getModel($type);
+
             // Save to database
-            NFLBets::updateOrCreate([
-                'game_date' => substr($datetime, 0, 10),
-                'game_time' => substr($datetime, 11),
-                'team_left' => $teamA,
-                'team_right' => $teamB,
-                'spread_left' => floatval($spreadA),
-                'spread_right' => floatval($spreadB),
-                'perc_bets_left' => rtrim($percentABets, '%'),
-                'perc_bets_right' => rtrim($percentBBets, '%'),
-                'perc_money_left' => rtrim($percentAMoney, '%'),
-                'perc_money_right' => rtrim($percentBMoney, '%'),
-            ]);
+            $model::updateOrCreate(
+                [
+                    'game_date' => substr($datetime, 0, 10),
+                    'game_time' => substr($datetime, 11),
+                    'team_left' => $teamA,
+                    'team_right' => $teamB,
+                ],
+                [
+                    'spread_left' => (float) $spreadA,
+                    'spread_right' => (float) $spreadB,
+                    'perc_bets_left' => rtrim($percentABets, '%'),
+                    'perc_bets_right' => rtrim($percentBBets, '%'),
+                    'perc_money_left' => rtrim($percentAMoney, '%'),
+                    'perc_money_right' => rtrim($percentBMoney, '%'),
+                ]
+            );
             // fputcsv($csvFile, [$teamA, $teamB, $datetime, $percentABets, $percentBBets, $percentAMoney, $percentBMoney, $spreadA, $spreadB]);
         }
 
         // file_put_contents(storage_path($request['game'] . ".html"), $page);
-        echo NFLBets::all();
+        echo $model::all();
         return "Scraping completed and data saved.\n";
     }
 
 
     public function scrapeResults(Request $request, PageFetchService $pageFetchService)
     {
-        $year = $request->query('year');
-        $week = $request->query('week');
+        $game = Game::from($request['game']);
+        $type = GameDataType::Results;
+
+        if ($request['game'] === "ncaab") {
+            $date = $request->query('date');
+            $url = "https://www.scoresandodds.com/" . $request['game'] . "?date=" . $date;
+        } else {
+            $year = $request->query('year');
+            $week = $request->query('week');
+
+            $url = "https://www.scoresandodds.com/" . $request['game'] . "?week=" . $year . "-reg-" . $week;
+        }
 
 
         //Format https://www.scoresandodds.com/nfl?week=2025-reg-15
 
-        $url = "https://www.scoresandodds.com/" . $request['game'] . "?week=" . $year . "-reg-" . $week;
         $page = $pageFetchService->fetchPageContent($url);
 
         if (!$page) {
@@ -201,7 +222,9 @@ class ScrapeController extends Controller
                 'winning_spread' => $winningSpread,
             ];
 
-            NFLResults::updateOrCreate($attributes, $values);
+            $model = $game->getModel($type);
+
+            $model::updateOrCreate($attributes, $values);
 
             $games[] = [$awayTeam, $awayScore, $homeTeam, $homeScore, $date, $time, $winningSpread];
         }
