@@ -105,7 +105,7 @@
         }
 
         .card:hover {
-            transform: translateY(-6px);
+            transform: translateY(-3px);
             box-shadow: 0 12px 30px rgba(2, 6, 23, 0.5);
         }
 
@@ -330,6 +330,27 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        .export-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .16s ease;
+        }
+
+        .export-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
         /* responsive */
         @media (max-width:880px) {
             .grid {
@@ -414,15 +435,25 @@
                 <div>
                     <div class="tabs">
                         <button class="tab active" data-tab="nfl-run">Run</button>
-                        <button class="tab" data-tab="nfl-results">Results</button>
+                        <button class="tab" data-tab="nfl-results">Data</button>
                     </div>
                     <div class="tab-content active" id="nfl-run">
-                        <button class="btn btn-run" onclick="openNflModal()">Results Scraping</button>
-                        <a class="btn btn-run" href="{{ url('/scrape-bets/nfl') }}">Bets Scraping</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <button class="btn btn-run" onclick="openNflModal()">Results Scraping</button>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/nfl') }}">Bets Scraping</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('nfl');return false;">Export CSV</a>
+                        </div>
                     </div>
                     <div class="tab-content" id="nfl-results">
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}">Results</a>
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'bets']) }}">Bets</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'bets']) }}">Bets</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('nfl');return false;">Export CSV</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -435,15 +466,25 @@
                 <div>
                     <div class="tabs">
                         <button class="tab active" data-tab="ncaaf-run">Run</button>
-                        <button class="tab" data-tab="ncaaf-results">Results</button>
+                        <button class="tab" data-tab="ncaaf-results">Data</button>
                     </div>
                     <div class="tab-content active" id="ncaaf-run">
-                        <button class="btn btn-run" onclick="openNcaafModal()">Results Scraping</button>
-                        <a class="btn btn-run" href="{{ url('/scrape-bets/ncaaf') }}">Bets Scraping</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <button class="btn btn-run" onclick="openNcaafModal()">Results Scraping</button>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaaf') }}">Bets Scraping</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('ncaaf');return false;">Export CSV</a>
+                        </div>
                     </div>
                     <div class="tab-content" id="ncaaf-results">
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}">Results</a>
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'bets']) }}">Bets</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'bets']) }}">Bets</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('ncaaf');return false;">Export CSV</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -456,16 +497,26 @@
                 <div>
                     <div class="tabs">
                         <button class="tab active" data-tab="ncaab-run">Run</button>
-                        <button class="tab" data-tab="ncaab-results">Results</button>
+                        <button class="tab" data-tab="ncaab-results">Data</button>
                     </div>
                     <div class="tab-content active" id="ncaab-run">
-                        <button class="btn btn-run" onclick="openDateModal('ncaab', 'NCAAB')">Results
-                            Scraping</button>
-                        <a class="btn btn-run" href="{{ url('/scrape-bets/ncaab') }}">Bets Scraping</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <button class="btn btn-run" onclick="openDateModal('ncaab', 'NCAAB')">Results
+                                    Scraping</button>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaab') }}">Bets Scraping</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('ncaab');return false;">Export CSV</a>
+                        </div>
                     </div>
                     <div class="tab-content" id="ncaab-results">
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}">Results</a>
-                        <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'bets']) }}">Bets</a>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'bets']) }}">Bets</a>
+                            </div>
+                            <a href="#" class="export-link" onclick="openExportModal('ncaab');return false;">Export CSV</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -494,6 +545,31 @@
             <div class="modal-actions">
                 <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
                 <button class="modal-btn modal-btn-primary" onclick="confirmDate()">Start Scraping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal (reused for homepage) -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <h2>Export CSV — <span id="exportModalGameName"></span></h2>
+            <p>Select which data index runs you want to include in the export.</p>
+
+            <div style="margin-bottom:12px">
+                <label style="display:block;color:var(--muted);font-size:13px;margin-bottom:6px">Type</label>
+                <select id="exportType" class="modal-input">
+                    <option value="results">results</option>
+                    <option value="bets">bets</option>
+                </select>
+            </div>
+
+            <div id="exportIndices" style="max-height:220px;overflow:auto;border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:8px;margin-bottom:12px">
+                <!-- indices checkboxes inserted here -->
+            </div>
+
+            <div style="display:flex;gap:8px">
+                <button class="modal-btn modal-btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="startExport()">Export Selected</button>
             </div>
         </div>
     </div>
@@ -685,7 +761,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 closeNcaafModal();
             }
         });
-
+ 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function () {
@@ -701,6 +777,93 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 document.getElementById(tabId).classList.add('active');
             });
         });
+
+        // Export modal logic (global scope)
+        function openExportModal(game) {
+            window.__exportGame = game;
+            const gameNameMap = {
+                'nfl': 'NFL',
+                'ncaaf': 'NCAAF',
+                'ncaab': 'NCAAB'
+            };
+            const gameNameEl = document.getElementById('exportModalGameName');
+            if (gameNameEl) {
+                gameNameEl.textContent = gameNameMap[game] || game.toUpperCase();
+            }
+            const et = document.getElementById('exportType');
+            if (et) et.value = 'results';
+            fetchIndicesAndRender(game, 'results');
+            const em = document.getElementById('exportModal');
+            if (em) em.classList.add('active');
+        }
+
+        function closeExportModal() {
+            const em = document.getElementById('exportModal');
+            if (em) em.classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const et = document.getElementById('exportType');
+            if (et) {
+                et.addEventListener('change', function () {
+                    const type = this.value;
+                    fetchIndicesAndRender(window.__exportGame || 'nfl', type);
+                });
+            }
+        });
+
+        function fetchIndicesAndRender(game, type) {
+            const container = document.getElementById('exportIndices');
+            if (!container) return;
+            container.innerHTML = 'Loading...';
+            fetch('/data/indices?game=' + encodeURIComponent(game) + '&type=' + encodeURIComponent(type))
+                .then(r => r.json())
+                .then(data => {
+                    if (!Array.isArray(data)) {
+                        container.innerHTML = '<div style="color:#ffb4b4">No indices found</div>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    const checkAll = document.createElement('div');
+                    checkAll.style.marginBottom = '8px';
+                    checkAll.style.paddingBottom = '8px';
+                    checkAll.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
+                    checkAll.innerHTML = '<label style="color:#cbd5e1;font-weight:600;cursor:pointer"><input type="checkbox" id="export_check_all" style="margin-right:6px"> Check all</label>';
+                    container.appendChild(checkAll);
+                    const cacb = document.getElementById('export_check_all');
+                    if (cacb) {
+                        cacb.addEventListener('change', function () {
+                            container.querySelectorAll('input[type=checkbox].idx-check').forEach(cb => cb.checked = this.checked);
+                        });
+                    }
+
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.style.marginBottom = '6px';
+                        const label = document.createElement('label');
+                        label.style.color = '#cbd5e1';
+                        label.innerHTML = '<input class="idx-check" type="checkbox" value="' + item.id + '">  Dataset ID ' + item.id + ' — ' + (item.scraped_at ? item.scraped_at : '') + ' (' + (item.actual_rows !== undefined ? item.actual_rows : item.rows_found) + ' rows)';
+                        div.appendChild(label);
+                        container.appendChild(div);
+                    });
+                })
+                .catch(() => {
+                    container.innerHTML = '<div style="color:#ffb4b4">Failed to load indices</div>';
+                });
+        }
+
+        function startExport() {
+            const checks = Array.from(document.querySelectorAll('#exportIndices input.idx-check:checked')).map(n => n.value);
+            const typeEl = document.getElementById('exportType');
+            const type = typeEl ? typeEl.value : 'results';
+            const game = window.__exportGame || 'nfl';
+            const params = new URLSearchParams();
+            params.append('game', game);
+            params.append('type', type);
+            checks.forEach(v => params.append('indices[]', v));
+            // navigate to export route which will generate the file and show download
+            window.location.href = '/data/export?' + params.toString();
+        }
 
     </script>
 </body>

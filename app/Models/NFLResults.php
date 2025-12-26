@@ -13,9 +13,16 @@ class NFLResults extends Model
         'game_time',
         'team_left',
         'team_right',
-        'score_left',    
-        'score_right',    
-        'winning_spread',    
+        'score_left',
+        'score_right',
+        'winning_spread',
+        'data_index_id',
     ];
     public $timestamps = false;
+
+    public function dataIndex()
+    {
+        return $this->belongsTo(DataIndex::class, 'data_index_id');
+    }
+
 }

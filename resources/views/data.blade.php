@@ -332,6 +332,93 @@
             transform: translateY(-2px);
         }
 
+        .export-link {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            text-decoration: underline;
+            font-size: 13px;
+            padding: 6px 8px;
+            cursor: pointer;
+        }
+
+        .export-link:hover {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+            border-radius: 20px;
+            padding: 32px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(2, 6, 23, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+        }
+
+        .modal h2 {
+            margin: 0 0 8px 0;
+            font-size: 22px;
+            color: var(--accent);
+        }
+
+        .modal p {
+            margin: 0 0 24px 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all .16s ease;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 1), rgba(99, 102, 241, 1));
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .modal-btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--accent);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
         @media (max-width: 768px) {
             .wrapper {
                 padding: 20px;
@@ -371,47 +458,49 @@
 </head>
 
 <body>
-
     <div class="wrapper">
         <div class="header">
             <div class="brand">
                 <div class="logo">GS</div>
                 <div>
-                    <div class="title">{{ strtoupper($game) }} {{ strtoupper($type) }}</div>
+                    <div class="title">{{ strtoupper($game ?? 'GAME') }} {{ strtoupper($type ?? 'TYPE') }}</div>
                     <div class="subtitle">Latest game results and scores</div>
                 </div>
             </div>
-            <a href="{{ route('welcome') }}" class="btn-back">← Back</a>
+            <div style="display:flex;gap:8px;align-items:center">
+                <a href="{{ route('welcome') }}" class="btn-back">← Back</a>
+                <a href="#" class="export-link" onclick="openDataExportModal();return false;">Export CSV</a>
+            </div>
         </div>
 
         <div class="game-selector">
             <a href="{{ route('data', ['game' => 'nfl', 'type' => 'bets']) }}"
-                class="game-btn {{ $game === 'nfl' && $type === 'bets' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'nfl' && ($type ?? '') === 'bets' ? 'active' : '' }}">
                 NFL Bets
             </a>
             <a href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}"
-                class="game-btn {{ $game === 'nfl' && $type === 'results' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'nfl' && ($type ?? '') === 'results' ? 'active' : '' }}">
                 NFL Results
             </a>
             <a href="{{ route('data', ['game' => 'ncaaf', 'type' => 'bets']) }}"
-                class="game-btn {{ $game === 'ncaaf' && $type === 'bets' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'ncaaf' && ($type ?? '') === 'bets' ? 'active' : '' }}">
                 NCAAF Bets
             </a>
             <a href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}"
-                class="game-btn {{ $game === 'ncaaf' && $type === 'results' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'ncaaf' && ($type ?? '') === 'results' ? 'active' : '' }}">
                 NCAAF Results
             </a>
             <a href="{{ route('data', ['game' => 'ncaab', 'type' => 'bets']) }}"
-                class="game-btn {{ $game === 'ncaab' && $type === 'bets' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'ncaab' && ($type ?? '') === 'bets' ? 'active' : '' }}">
                 NCAAB Bets
             </a>
             <a href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}"
-                class="game-btn {{ $game === 'ncaab' && $type === 'results' ? 'active' : '' }}">
+                class="game-btn {{ ($game ?? '') === 'ncaab' && ($type ?? '') === 'results' ? 'active' : '' }}">
                 NCAAB Results
             </a>
         </div>
 
-        @if(!isset($data))
+        @if(collect($groupedData)->isEmpty())
             <div class="table-container">
                 <div class="table-wrapper">
                     <div class="empty-state">
@@ -425,94 +514,170 @@
                 </div>
             </div>
         @else
-            <div class="table-container">
-                <div class="table-header">
-                    <h2>All Games</h2>
-                    <div class="record-count">
-                        {{ $data->count() }} {{ Str::plural('game', $data->count()) }}
+            @foreach($groupedData as $indexId => $rows)
+                @php
+                    $rows = collect($rows);
+                    $first = $rows->first();
+                    $index = $first?->dataIndex; // Safe navigation operator
+                @endphp
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>
+                            {{ $index?->scraped_at ? 'Scraped on: ' . \Carbon\Carbon::parse($index->scraped_at)->format('M d, Y H:i') : '' }}
+                            <br>
+                            {{ $index?->date ? 'Scraped for Date: ' . $index->date : '' }}
+                            {{ $index?->year ? 'Scraped for Season ' . $index->year : '' }}
+                            {{ $index?->week ? 'Week ' . $index->week : '' }}
+
+                        </h2>
+                        <div class="record-count">
+                            {{ $rows->count() }} {{ \Illuminate\Support\Str::plural('game', $rows->count()) }}
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        @if($rows->isEmpty())
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3>No Results Found</h3>
+                                <p>There are no game results available at this time.</p>
+                            </div>
+                        @else
+                            <table>
+                                <thead>
+                                    <tr>
+                                        @if(($type ?? '') === 'results')
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Team Left</th>
+                                            <th>Score Left</th>
+                                            <th>Team Right</th>
+                                            <th>Score Right</th>
+                                            <th>Winning Spread</th>
+                                        @else
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Team Left</th>
+                                            <th>Spread Left</th>
+                                            <th>% Bets Left</th>
+                                            <th>% Money Left</th>
+                                            <th>Team Right</th>
+                                            <th>Spread Right</th>
+                                            <th>% Bets Right</th>
+                                            <th>% Money Right</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($rows as $result)
+                                        <tr>
+                                            <td>{{ $result->game_date ? \Carbon\Carbon::parse($result->game_date)->format('M d, Y') : '-' }}
+                                            </td>
+                                            <td>
+                                                {{ $result->game_time ? \Carbon\Carbon::parse($result->game_time)->format('h:i A') : '-' }}
+                                            </td>
+
+                                            <td class="team-cell">{{ $result->team_left ?? '-' }}</td>
+
+                                            @if(($type ?? '') === 'results')
+                                                <td class="score">{{ $result->score_left ?? '-' }}</td>
+                                                <td class="team-cell">{{ $result->team_right ?? '-' }}</td>
+                                                <td class="score">{{ $result->score_right ?? '-' }}</td>
+                                                <td>{{ $result->winning_spread ?? '-' }}</td>
+                                            @else
+                                                <td>{{ $result->spread_left ?? '-' }}</td>
+                                                <td>{{ $result->perc_bets_left ?? '-' }}</td>
+                                                <td>{{ $result->perc_money_left ?? '-' }}</td>
+                                                <td class="team-cell">{{ $result->team_right ?? '-' }}</td>
+                                                <td>{{ $result->spread_right ?? '-' }}</td>
+                                                <td>{{ $result->perc_bets_right ?? '-' }}</td>
+                                                <td>{{ $result->perc_money_right ?? '-' }}</td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
                     </div>
                 </div>
+            @endforeach
 
-                <div class="table-wrapper">
-                    @if($data->isEmpty())
-                        <div class="empty-state">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <h3>No Results Found</h3>
-                            <p>There are no game results available at this time.</p>
-                        </div>
-                    @else
-                        <table>
-                            <thead>
-                                <tr>
-                                    @if($type == 'results')
-                                        <th>Date</th>
-                                        <th>Time</th>
-                                        <th>Team Left</th>
-                                        <th>Score Left</th>
-                                        <th>Team Right</th>
-                                        <th>Score Right</th>
-                                        <th>Winning Spread</th>
-                                    @else
-                                        <th>Date</th>
-                                        <th>Time</th>
-                                        <th>Team Left</th>
-                                        <th>Spread Left</th>
-                                        <th>% Bets Left</th>
-                                        <th>% Money Left</th>
-                                        <th>Team Right</th>
-                                        <th>Spread Right</th>
-                                        <th>% Bets Right</th>
-                                        <th>% Money Right</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if($type == 'results')
-                                    @foreach($data as $result)
-                                        <tr>
-                                            <td>{{ \Carbon\Carbon::parse($result->game_date)->format('M d, Y') }}</td>
-                                            <td>{{ $result->game_time }}</td>
-                                            <td class="team-cell">{{ $result->team_left }}</td>
-                                            <td class="score">{{ $result->score_left !== null ? $result->score_left : '-' }}</td>
-                                            <td class="team-cell">{{ $result->team_right }}</td>
-                                            <td class="score">{{ $result->score_right !== null ? $result->score_right : '-' }}</td>
-                                            <td>{{ $result->winning_spread !== null ? $result->winning_spread : '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                @else
-                                    @foreach($data as $result)
-                                        <tr>
-                                            <td>{{ \Carbon\Carbon::parse($result->game_date)->format('M d, Y') }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($result->game_time)->format('h:i A') }}</td>
-
-                                            <td class="team-cell">{{ $result->team_left }}</td>
-                                            <td>{{ $result->spread_left ?? '-' }}</td>
-                                            <td>{{ $result->perc_bets_left ?? '-' }}</td>
-                                            <td>{{ $result->perc_money_left ?? '-' }}</td>
-
-                                            <td class="team-cell">{{ $result->team_right }}</td>
-                                            <td>{{ $result->spread_right ?? '-' }}</td>
-                                            <td>{{ $result->perc_bets_right ?? '-' }}</td>
-                                            <td>{{ $result->perc_money_right ?? '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            </tbody>
-                        </table>
-                    @endif
-                </div>
-            </div>
-
-            @if($data->hasPages())
+            @if(isset($paginator) && method_exists($paginator, 'hasPages') && $paginator->hasPages())
                 <div class="pagination-wrapper">
-                    {{ $data->links() }}
+                    {{ $paginator->links() }}
                 </div>
             @endif
         @endif
+
+    </div>
+
+    <div class="modal-overlay" id="exportModalData">
+        <div class="modal">
+            <h2>Export CSV — {{ strtoupper($game ?? 'GAME') }}</h2>
+            <p>Select which data index runs you want to include in the export for this view.</p>
+
+            <div style="max-height:280px;overflow:auto;border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:8px;margin-bottom:12px" id="exportDataIndices">
+                <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08)">
+                    <label style="color:#cbd5e1;font-weight:600;cursor:pointer"><input type="checkbox" id="exportData_check_all" style="margin-right:6px"> Check all</label>
+                </div>
+                @foreach($groupedData as $idx => $rows)
+                    @php
+                        $first = collect($rows)->first();
+                        $meta = $first?->dataIndex;
+                    @endphp
+                    <div style="margin-bottom:8px">
+                        <label style="color:#cbd5e1"><input class="idx-check-data" type="checkbox" value="{{ $idx }}"> Dataset ID {{ $idx }} — {{ $meta?->scraped_at ? \Carbon\Carbon::parse($meta->scraped_at)->format('Y-m-d H:i') : '' }} ({{ count($rows) }} rows)</label>
+                    </div>
+                @endforeach
+            </div>
+
+            <div style="display:flex;gap:8px">
+                <button class="modal-btn modal-btn-secondary" onclick="closeDataExportModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="startDataExport()">Export Selected</button>
+            </div>
+        </div>
     </div>
 </body>
 
 </html>
+<script>
+    function openDataExportModal() {
+        document.getElementById('exportModalData').classList.add('active');
+    }
+
+    function closeDataExportModal() {
+        document.getElementById('exportModalData').classList.remove('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAll = document.getElementById('exportData_check_all');
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                document.querySelectorAll('.idx-check-data').forEach(cb => {
+                    cb.checked = this.checked;
+                });
+            });
+        }
+    });
+
+    function startDataExport() {
+        const checks = Array.from(document.querySelectorAll('.idx-check-data:checked')).map(n => n.value);
+        if (checks.length === 0) {
+            alert('Please select at least one index to export');
+            return;
+        }
+        const params = new URLSearchParams();
+        params.append('game', '{{ $game }}');
+        params.append('type', '{{ $type }}');
+        checks.forEach(v => params.append('indices[]', v));
+        window.location.href = '/data/export?' + params.toString();
+    }
+
+    document.getElementById('exportModalData').addEventListener('click', function (e) {
+        if (e.target === this) closeDataExportModal();
+    });
+</script>

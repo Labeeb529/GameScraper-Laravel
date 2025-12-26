@@ -19,7 +19,13 @@ class NCAABBets extends Model
         'perc_bets_right',
         'perc_money_left',
         'perc_money_right',
+        'data_index_id',
     ];
+
+    public function dataIndex()
+    {
+        return $this->belongsTo(DataIndex::class, 'data_index_id');
+    }
 
     public $timestamps = false;
 }

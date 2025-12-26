@@ -21,3 +21,16 @@ Route::get('/cron-management', function () {
 Route::get('/data/{game}/{type}', [DataController::class, 'getData'])
     ->name('data')
     ->where('type', 'bets|results');
+
+
+//API call for CSV exports
+
+Route::get('/data/export', [DataController::class, 'exportCsv'])
+    ->name('export-data')
+    ->where('type', 'bets|results');
+
+Route::get('/data/export/download/{file}', [DataController::class, 'downloadExport'])
+    ->name('export.download');
+
+Route::get('/data/indices', [DataController::class, 'getIndices'])
+    ->name('data.indices');

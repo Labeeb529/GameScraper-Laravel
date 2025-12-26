@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -24,7 +23,11 @@ return new class extends Migration
             $table->integer('perc_bets_right')->nullable();
             $table->integer('perc_money_left')->nullable();
             $table->integer('perc_money_right')->nullable();
-        }); 
+            $table->foreignId('data_index_id')
+                ->nullable()
+                ->constrained('data_index')
+                ->cascadeOnDelete();
+        });
     }
 
     /**

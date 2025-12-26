@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DataIndexService;
 use App\Services\PageFetchService;
 use Illuminate\Http\Request;
 use DOMDocument;
 use DOMXPath;
-use App\Models\NFLBets;
-use App\Models\NFLResults;
 use DateTime;
 use DateTimeZone;
 use App\Enums\Game;
@@ -19,6 +18,10 @@ class ScrapeController extends Controller
     {
         $game = Game::from($request['game']);
         $type = GameDataType::Bets;
+
+        // calling index service to assign indexes to each scrape
+        $indexService = app(DataIndexService::class);
+        $index = $indexService->start($request['game'] . '_bets');
 
         echo $request['game'];
         //Hardcoded for testing purposes
@@ -86,7 +89,7 @@ class ScrapeController extends Controller
 
             //Select the model based on the game and type
             $model = $game->getModel($type);
-
+            $indexService->incrementFound();
             // Save to database
             $model::updateOrCreate(
                 [
@@ -102,8 +105,11 @@ class ScrapeController extends Controller
                     'perc_bets_right' => rtrim($percentBBets, '%'),
                     'perc_money_left' => rtrim($percentAMoney, '%'),
                     'perc_money_right' => rtrim($percentBMoney, '%'),
+                    'data_index_id' => $index->id,
                 ]
             );
+            $indexService->incrementFound();
+
             // fputcsv($csvFile, [$teamA, $teamB, $datetime, $percentABets, $percentBBets, $percentAMoney, $percentBMoney, $spreadA, $spreadB]);
         }
 
@@ -115,18 +121,22 @@ class ScrapeController extends Controller
 
     public function scrapeResults(Request $request, PageFetchService $pageFetchService)
     {
+
         $game = Game::from($request['game']);
         $type = GameDataType::Results;
+        $date = $request->query('date') ?? null;
+        $year = $request->query('year') ?? null;
+        $week = $request->query('week') ?? null;
 
         if ($request['game'] === "ncaab") {
-            $date = $request->query('date');
             $url = "https://www.scoresandodds.com/" . $request['game'] . "?date=" . $date;
         } else {
-            $year = $request->query('year');
-            $week = $request->query('week');
-
             $url = "https://www.scoresandodds.com/" . $request['game'] . "?week=" . $year . "-reg-" . $week;
         }
+
+        // calling index service to assign indexes to each scrape
+        $indexService = app(DataIndexService::class);
+        $index = $indexService->start($request['game'] . '_results', $date, $week, $year);
 
 
         //Format https://www.scoresandodds.com/nfl?week=2025-reg-15
@@ -154,6 +164,8 @@ class ScrapeController extends Controller
         $games = [];
 
         foreach ($eventCards as $card) {
+            $indexService->incrementFound();
+
             $cardXpath = new DOMXPath($dom);
 
             $statusNode = $cardXpath->query('.//span[@data-field="state"]', $card)->item(0);
@@ -220,11 +232,14 @@ class ScrapeController extends Controller
                 'score_left' => $awayScore,
                 'score_right' => $homeScore,
                 'winning_spread' => $winningSpread,
+                'data_index_id' => $index->id,
             ];
 
             $model = $game->getModel($type);
 
             $model::updateOrCreate($attributes, $values);
+
+            $indexService->incrementFound();
 
             $games[] = [$awayTeam, $awayScore, $homeTeam, $homeScore, $date, $time, $winningSpread];
         }
