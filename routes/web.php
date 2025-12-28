@@ -1,25 +1,28 @@
 <?php
 
-use App\Http\Controllers\BetsController;
-use App\Enums\GameType;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ScrapeController;
+use App\Http\Controllers\SchedulingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::get('/scrape-bets/{game}', [ScrapeController::class, 'scrapeBets']);
-Route::get('/scrape-results/{game}', [ScrapeController::class, 'scrapeResults']);
+Route::get('/scrape-bets/{game}', [ScrapeController::class, 'scrapeBets'])
+    ->where('game', 'nfl|ncaaf|ncaab');
+Route::get('/scrape-results/{game}', [ScrapeController::class, 'scrapeResults'])
+    ->where('game', 'nfl|ncaaf|ncaab');
 
-// Cron Management Routes
-Route::get('/cron-management', function () {
-    return view('cron');
-});
+// Scraper Job Scheduling Routes
+Route::get('/cron-management', [SchedulingController::class, 'index'])->name('scraper-jobs.index');
+Route::post('/scraper-jobs', [SchedulingController::class, 'store'])->name('scraper-jobs.store');
+Route::patch('/scraper-jobs/{id}/toggle', [SchedulingController::class, 'toggle'])->name('scraper-jobs.toggle');
+Route::delete('/scraper-jobs/{id}', [SchedulingController::class, 'destroy'])->name('scraper-jobs.destroy');
 
 Route::get('/data/{game}/{type}', [DataController::class, 'getData'])
     ->name('data')
+    ->where('game', 'nfl|ncaaf|ncaab')
     ->where('type', 'bets|results');
 
 

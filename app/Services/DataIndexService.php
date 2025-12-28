@@ -6,7 +6,7 @@ use App\Models\DataIndex;
 
 class DataIndexService
 {
-    protected DataIndex $index;
+    protected ?DataIndex $index = null;
 
     public function start(string $scraperName, $date = null, $week = null, $year = null): DataIndex
     {
@@ -25,16 +25,28 @@ class DataIndexService
 
     public function incrementFound(int $count = 1): void
     {
+        if ($this->index === null) {
+            return;
+        }
+
         $this->index->increment('rows_found', $count);
     }
 
     public function incrementMerged(int $count = 1): void
     {
+        if ($this->index === null) {
+            return;
+        }
+
         $this->index->increment('rows_merged', $count);
     }
 
     public function finish(): void
     {
+        if ($this->index === null) {
+            return;
+        }
+
         $this->index->update([
             'completed_at' => now(),
         ]);

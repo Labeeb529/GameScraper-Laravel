@@ -410,6 +410,64 @@
                 font-size: 12px
             }
         }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border-radius: 12px;
+            padding: 18px 22px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            color: var(--accent);
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 12px 40px rgba(2,6,23,0.6);
+            font-weight: 700;
+        }
+
+        .loading-text {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .loading-title {
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .loading-note {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.08);
+            border-top-color: rgba(99,102,241,0.95);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
@@ -441,7 +499,7 @@
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
                                 <button class="btn btn-run" onclick="openNflModal()">Results Scraping</button>
-                                <a class="btn btn-run" href="{{ url('/scrape-bets/nfl') }}">Bets Scraping</a>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/nfl') }}" data-redirect>Bets Scraping</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('nfl');return false;">Export CSV</a>
                         </div>
@@ -449,7 +507,7 @@
                     <div class="tab-content" id="nfl-results">
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                                <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'results']) }}">Results</a>
                                 <a class="btn btn-view" href="{{ route('data', ['game' => 'nfl', 'type' => 'bets']) }}">Bets</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('nfl');return false;">Export CSV</a>
@@ -472,7 +530,7 @@
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
                                 <button class="btn btn-run" onclick="openNcaafModal()">Results Scraping</button>
-                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaaf') }}">Bets Scraping</a>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaaf') }}" data-redirect>Bets Scraping</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('ncaaf');return false;">Export CSV</a>
                         </div>
@@ -480,7 +538,7 @@
                     <div class="tab-content" id="ncaaf-results">
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'results']) }}">Results</a>
                                 <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaaf', 'type' => 'bets']) }}">Bets</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('ncaaf');return false;">Export CSV</a>
@@ -504,7 +562,7 @@
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
                                 <button class="btn btn-run" onclick="openDateModal('ncaab', 'NCAAB')">Results
                                     Scraping</button>
-                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaab') }}">Bets Scraping</a>
+                                <a class="btn btn-run" href="{{ url('/scrape-bets/ncaab') }}" data-redirect>Bets Scraping</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('ncaab');return false;">Export CSV</a>
                         </div>
@@ -512,7 +570,7 @@
                     <div class="tab-content" id="ncaab-results">
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}">Data</a>
+                                <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'results']) }}">Results</a>
                                 <a class="btn btn-view" href="{{ route('data', ['game' => 'ncaab', 'type' => 'bets']) }}">Bets</a>
                             </div>
                             <a href="#" class="export-link" onclick="openExportModal('ncaab');return false;">Export CSV</a>
@@ -648,7 +706,10 @@ for ($y = $currentYear; $y >= 2020; $y--) {
         function confirmDate() {
             const date = document.getElementById('scrapingDate').value;
             if (date) {
-                window.location.href = '/scrape-results/' + currentScraperPage + '?date=' + date;
+                showScrapingOverlay();
+                requestAnimationFrame(function () {
+                    window.location.href = '/scrape-results/' + currentScraperPage + '?date=' + date;
+                });
             }
         }
 
@@ -671,7 +732,10 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             const year = document.getElementById('nflYear').value;
             const week = document.getElementById('nflWeek').value;
             if (year && week) {
-                window.location.href = '/scrape-results/nfl?year=' + year + '&week=' + week;
+                showScrapingOverlay();
+                requestAnimationFrame(function () {
+                    window.location.href = '/scrape-results/nfl?year=' + year + '&week=' + week;
+                });
             }
         }
 
@@ -723,7 +787,10 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             const year = document.getElementById('ncaafYear').value;
             const week = document.getElementById('ncaafWeek').value;
             if (year && week) {
-                window.location.href = '/scrape-results/ncaaf?year=' + year + '&week=' + week;
+                showScrapingOverlay();
+                requestAnimationFrame(function () {
+                    window.location.href = '/scrape-results/ncaaf?year=' + year + '&week=' + week;
+                });
             }
         }
 
@@ -861,11 +928,68 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             params.append('game', game);
             params.append('type', type);
             checks.forEach(v => params.append('indices[]', v));
-            // navigate to export route which will generate the file and show download
-            window.location.href = '/data/export?' + params.toString();
+            showExportOverlay();
+            requestAnimationFrame(function () {
+                window.location.href = '/data/export?' + params.toString();
+            });
         }
 
+        function showScrapingOverlay() {
+            const o = document.getElementById('scrapeOverlay');
+            if (o) o.classList.add('active');
+        }
+
+        function showExportOverlay() {
+            const o = document.getElementById('exportOverlay');
+            if (o) o.classList.add('active');
+        }
+
+        // Client-side loader handlers
+        // - Links: add `data-redirect` attribute to anchors that should show loader
+        //   then navigate. Intercept click, show loader, then navigate inside
+        //   requestAnimationFrame to allow the browser to paint the loader.
+        document.addEventListener('click', function (e) {
+            const a = e.target.closest && e.target.closest('a[data-redirect]');
+            if (!a) return;
+            e.preventDefault();
+            showScrapingOverlay();
+            requestAnimationFrame(function () {
+                window.location.href = a.href;
+            });
+        });
+
+        // Forms: add `data-loader` to forms that should show a loader on submit.
+        // Intercept submit, show loader, then submit inside requestAnimationFrame.
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (!form || !form.matches) return;
+            if (!form.matches('[data-loader]')) return;
+            e.preventDefault();
+            const type = form.getAttribute('data-loader') || 'scrape';
+            if (type === 'export') showExportOverlay(); else showScrapingOverlay();
+            requestAnimationFrame(function () { form.submit(); });
+        });
+
     </script>
+    <div class="loading-overlay" id="scrapeOverlay">
+        <div class="loading-card">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loading-text">
+                <div class="loading-title">Scraping</div>
+                <div class="loading-note">Do not refresh or close this page</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="exportOverlay">
+        <div class="loading-card">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loading-text">
+                <div class="loading-title">Generating Export File</div>
+                <div class="loading-note">Do not refresh or close this page</div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

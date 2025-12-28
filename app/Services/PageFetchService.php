@@ -8,16 +8,21 @@ class PageFetchService
 {
     public function fetchPageContent($url)
     {
-        $response = Http::withOptions([
-            'verify' => false,
-        ])->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                ])->get($url);
+        try {
+            $response = Http::timeout(120)->withOptions([
+                'verify' => false,
+            ])->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ])->get($url);
 
-        if ($response->successful()) {
-            return $response->body();
+            if ($response->successful()) {
+                $body = $response->body();
+                return !empty($body) ? $body : null;
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            return null;
         }
-
-        throw new Exception('Failed to fetch page content. HTTP ' . $response->status());
     }
 }

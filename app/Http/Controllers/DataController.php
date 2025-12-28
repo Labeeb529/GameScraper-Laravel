@@ -56,23 +56,34 @@ class DataController extends Controller
             $indices = [$indices];
         }
 
+        $indices = array_filter(array_map('intval', $indices), function($id) {
+            return $id > 0;
+        });
+
         $query = $modelClass::query();
-        if (!empty($indices)) {
-            $query->whereIn('data_index_id', $indices);
+        if (empty($indices)) {
+            return redirect()->back()->with('error', 'Please select at least one data index to export');
         }
+
+        $query->whereIn('data_index_id', $indices);
 
         $query->with('dataIndex');
 
         // prepare export path
         $exportDir = storage_path('app/exports');
         if (!is_dir($exportDir)) {
-            mkdir($exportDir, 0755, true);
+            if (!@mkdir($exportDir, 0755, true) && !is_dir($exportDir)) {
+                return redirect()->back()->with('error', 'Failed to create export directory');
+            }
         }
 
         $filename = sprintf('%s_%s_%s.csv', $gameValue, $typeValue, date('Ymd_His'));
         $filePath = $exportDir . DIRECTORY_SEPARATOR . $filename;
 
-        $handle = fopen($filePath, 'w');
+        $handle = @fopen($filePath, 'w');
+        if ($handle === false) {
+            return redirect()->back()->with('error', 'Failed to create export file');
+        }
 
         if ($typeValue === 'bets') {
             fputcsv($handle, ['Game Date', 'Game Time', 'Team Left', 'Team Right', 'Spread Left', 'Spread Right', 'Percentage Bets Left', 'Percentage Bets Right', 'Percentage Money Left', 'Percentage Money Right', 'Data Index']);

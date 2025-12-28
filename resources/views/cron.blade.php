@@ -1,16 +1,3 @@
-<?php
-// Read root's crontab (where actual cron jobs are stored)
-$currentCron = shell_exec("sudo crontab -l 2>/dev/null") ?: '';
-$scrapers = [
-    'nfl-bets-scraper.php' => 'NFL Bets',
-    'nfl-results-scraper.php' => 'NFL Results',
-    'ncaaf-bets-scraper.php' => 'NCAAF Bets',
-    'ncaaf-results-scraper.php' => 'NCAAF Results',
-    'ncaab-bets-scraper.php' => 'NCAAB Bets',
-    'ncaab-results-scraper.php' => 'NCAAB Results',
-];
-$scriptPath = dirname(__DIR__) . '/src/scripts/';
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -105,11 +92,6 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
             margin-top: 8px;
         }
 
-        .timezone-notice::before {
-            content: "🕐";
-            font-size: 12px;
-        }
-
         .tabs-main {
             display: flex;
             gap: 8px;
@@ -179,11 +161,6 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
             font-size: 13px;
             color: rgba(147, 197, 253, 0.95);
             line-height: 1.6;
-        }
-
-        .info-box::before {
-            content: "ℹ️";
-            margin-right: 8px;
         }
 
         .form-control,
@@ -279,6 +256,11 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
             padding: 8px 16px;
         }
 
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
         .btn-secondary {
             background: rgba(255, 255, 255, 0.08);
             color: var(--accent);
@@ -326,6 +308,23 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
             color: var(--muted);
         }
 
+        .schedule-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: 12px;
+        }
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.2);
+            color: rgba(34, 197, 94, 1);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgba(239, 68, 68, 1);
+        }
+
         .schedule-actions {
             display: flex;
             gap: 8px;
@@ -338,48 +337,28 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
             font-size: 14px;
         }
 
-        .advanced-toggle {
-            margin-top: 32px;
-            text-align: center;
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .advanced-toggle button {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--muted);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all .16s ease;
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: rgba(34, 197, 94, 1);
         }
 
-        .advanced-toggle button:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--accent);
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: rgba(239, 68, 68, 1);
         }
 
-        .advanced-section {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .advanced-section.active {
-            display: block;
-        }
-
-        .textarea {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            padding: 12px;
-            color: var(--accent);
-            border-radius: 9px;
-            font-size: 12px;
-            font-family: 'Courier New', monospace;
-            resize: vertical;
-            min-height: 200px;
-            line-height: 1.6;
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
         }
 
         @media (max-width:768px) {
@@ -421,8 +400,30 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
                     <div class="timezone-notice">Times indicated are in Mountain Time (MT).</div>
                 </div>
             </div>
-            <a href="index.php" class="btn btn-primary" style="text-decoration:none">← Back</a>
+            <a href="{{ route('welcome') }}" class="btn btn-primary" style="text-decoration:none">← Back</a>
         </div>
+
+        @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="alert alert-error">
+            {{ session('error') }}
+        </div>
+        @endif
+
+        @if($errors->any())
+        <div class="alert alert-error">
+            <ul style="margin:0;padding-left:20px">
+                @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
         <div class="tabs-main">
             <button class="tab-main active" data-tab="regular">Regular Weekly Scraping</button>
@@ -435,15 +436,22 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
                 <p style="margin:0 0 20px 0;font-size:13px;color:var(--muted)">Select a scraper, time, and day(s) of the
                     week to run automatically</p>
 
-                <form id="regularForm">
+                <form id="regularForm" method="POST" action="{{ route('scraper-jobs.store') }}">
+                    @csrf
+                    <input type="hidden" name="schedule_type" value="regular">
+                    <input type="hidden" name="run_once" value="0">
+
                     <div class="form-group">
                         <label class="form-label">Scraper</label>
-                        <select id="regular-scraper" class="form-select" required
+                        <select name="scraper_type" id="regular-scraper" class="form-select" required
                             onchange="toggleRegularParams(this.value)">
                             <option value="">Select a scraper...</option>
-                            <?php foreach ($scrapers as $file => $name): ?>
-                            <option value="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($name) ?></option>
-                            <?php endforeach; ?>
+                            <option value="nfl-bets">NFL Bets</option>
+                            <option value="nfl-results">NFL Results</option>
+                            <option value="ncaaf-bets">NCAAF Bets</option>
+                            <option value="ncaaf-results">NCAAF Results</option>
+                            <option value="ncaab-bets">NCAAB Bets</option>
+                            <option value="ncaab-results">NCAAB Results</option>
                         </select>
                     </div>
 
@@ -455,20 +463,18 @@ $scriptPath = dirname(__DIR__) . '/src/scripts/';
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Season</label>
-                                <select id="regular-nfl-year" class="form-select">
-                                    <?php
-$currentYear = date('Y');
-for ($y = $currentYear; $y >= 2020; $y--) {
-    echo "<option value='$y'>$y</option>";
-}
-                  ?>
+                                <select name="year" id="regular-nfl-year" class="form-select">
+                                    @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Week</label>
-                                <select id="regular-nfl-week" class="form-select">
-                                    <?php for ($w = 1; $w <= 18; $w++)
-    echo "<option value='$w'>Week $w</option>"; ?>
+                                <select name="week" id="regular-nfl-week" class="form-select">
+                                    @for($w = 1; $w <= 18; $w++)
+                                    <option value="{{ $w }}">Week {{ $w }}</option>
+                                    @endfor
                                 </select>
                             </div>
                         </div>
@@ -482,19 +488,18 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Season</label>
-                                <select id="regular-ncaaf-year" class="form-select">
-                                    <?php
-for ($y = $currentYear; $y >= 2020; $y--) {
-    echo "<option value='$y'>$y</option>";
-}
-                  ?>
+                                <select name="year" id="regular-ncaaf-year" class="form-select">
+                                    @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Week</label>
-                                <select id="regular-ncaaf-week" class="form-select">
-                                    <?php for ($w = 1; $w <= 15; $w++)
-    echo "<option value='$w'>Week $w</option>"; ?>
+                                <select name="week" id="regular-ncaaf-week" class="form-select">
+                                    @for($w = 1; $w <= 15; $w++)
+                                    <option value="{{ $w }}">Week {{ $w }}</option>
+                                    @endfor
                                 </select>
                             </div>
                         </div>
@@ -507,7 +512,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Game Date</label>
-                            <input type="date" id="regular-ncaab-date" class="form-control">
+                            <input type="date" name="date" id="regular-ncaab-date" class="form-control">
                         </div>
                     </div>
 
@@ -517,11 +522,11 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Time</label>
-                                <input type="time" id="regular-time" class="form-control" value="09:00" required>
+                                <input type="time" name="time" id="regular-time" class="form-control" value="09:00" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Day of Week</label>
-                                <select id="regular-day" class="form-select" required>
+                                <select name="day_of_week" id="regular-day" class="form-select" required>
                                     <option value="*">Every Day</option>
                                     <option value="1">Monday</option>
                                     <option value="2">Tuesday</option>
@@ -535,11 +540,47 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         </div>
                     </div>
 
+                    <div class="form-group" style="margin-top:20px">
+                        <label class="form-label">Job Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., NFL Results Weekly" required>
+                    </div>
+
                     <button type="submit" class="btn btn-success" style="margin-top:20px">Add Schedule</button>
                 </form>
             </div>
 
-            <div id="regular-schedules" class="schedule-list"></div>
+            <div id="regular-schedules" class="schedule-list">
+                @forelse($regularJobs as $job)
+                <div class="schedule-item">
+                    <div class="schedule-info">
+                        <div class="schedule-name">
+                            {{ $job->name }}
+                            <span class="schedule-status {{ $job->active ? 'status-active' : 'status-inactive' }}">
+                                {{ $job->active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+                        <div class="schedule-time">{{ $job->scraper_type }} - {{ $job->cron_expression }}</div>
+                    </div>
+                    <div class="schedule-actions">
+                        <form method="POST" action="{{ route('scraper-jobs.toggle', $job->id) }}" style="display:inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-secondary">
+                                {{ $job->active ? 'Deactivate' : 'Activate' }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('scraper-jobs.destroy', $job->id) }}" style="display:inline"
+                            onsubmit="return confirm('Are you sure you want to delete this schedule?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                @empty
+                <div class="empty-state">No weekly schedules yet. Add one above to get started.</div>
+                @endforelse
+            </div>
         </div>
 
         <div class="tab-panel" id="panel-onetime">
@@ -548,15 +589,22 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 <p style="margin:0 0 20px 0;font-size:13px;color:var(--muted)">Set up a scraper to run once at a
                     specific date and time</p>
 
-                <form id="onetimeForm">
+                <form id="onetimeForm" method="POST" action="{{ route('scraper-jobs.store') }}">
+                    @csrf
+                    <input type="hidden" name="schedule_type" value="onetime">
+                    <input type="hidden" name="run_once" value="1">
+
                     <div class="form-group">
                         <label class="form-label">Scraper</label>
-                        <select id="onetime-scraper" class="form-select" required
+                        <select name="scraper_type" id="onetime-scraper" class="form-select" required
                             onchange="toggleOnetimeParams(this.value)">
                             <option value="">Select a scraper...</option>
-                            <?php foreach ($scrapers as $file => $name): ?>
-                            <option value="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($name) ?></option>
-                            <?php endforeach; ?>
+                            <option value="nfl-bets">NFL Bets</option>
+                            <option value="nfl-results">NFL Results</option>
+                            <option value="ncaaf-bets">NCAAF Bets</option>
+                            <option value="ncaaf-results">NCAAF Results</option>
+                            <option value="ncaab-bets">NCAAB Bets</option>
+                            <option value="ncaab-results">NCAAB Results</option>
                         </select>
                     </div>
 
@@ -568,19 +616,18 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Season</label>
-                                <select id="onetime-nfl-year" class="form-select">
-                                    <?php
-for ($y = $currentYear; $y >= 2020; $y--) {
-    echo "<option value='$y'>$y</option>";
-}
-                  ?>
+                                <select name="year" id="onetime-nfl-year" class="form-select">
+                                    @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Week</label>
-                                <select id="onetime-nfl-week" class="form-select">
-                                    <?php for ($w = 1; $w <= 18; $w++)
-    echo "<option value='$w'>Week $w</option>"; ?>
+                                <select name="week" id="onetime-nfl-week" class="form-select">
+                                    @for($w = 1; $w <= 18; $w++)
+                                    <option value="{{ $w }}">Week {{ $w }}</option>
+                                    @endfor
                                 </select>
                             </div>
                         </div>
@@ -594,19 +641,18 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Season</label>
-                                <select id="onetime-ncaaf-year" class="form-select">
-                                    <?php
-for ($y = $currentYear; $y >= 2020; $y--) {
-    echo "<option value='$y'>$y</option>";
-}
-                  ?>
+                                <select name="year" id="onetime-ncaaf-year" class="form-select">
+                                    @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Week</label>
-                                <select id="onetime-ncaaf-week" class="form-select">
-                                    <?php for ($w = 1; $w <= 15; $w++)
-    echo "<option value='$w'>Week $w</option>"; ?>
+                                <select name="week" id="onetime-ncaaf-week" class="form-select">
+                                    @for($w = 1; $w <= 15; $w++)
+                                    <option value="{{ $w }}">Week {{ $w }}</option>
+                                    @endfor
                                 </select>
                             </div>
                         </div>
@@ -619,7 +665,7 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Game Date</label>
-                            <input type="date" id="onetime-ncaab-date" class="form-control">
+                            <input type="date" name="date" id="onetime-ncaab-date" class="form-control">
                         </div>
                     </div>
 
@@ -629,55 +675,70 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Run On Date</label>
-                                <input type="date" id="onetime-date" class="form-control" required>
+                                <input type="date" name="run_date" id="onetime-date" class="form-control" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Time</label>
-                                <input type="time" id="onetime-time" class="form-control" value="09:00" required>
+                                <input type="time" name="time" id="onetime-time" class="form-control" value="09:00" required>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:20px">
+                        <label class="form-label">Job Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., NFL Results One-Time" required>
                     </div>
 
                     <button type="submit" class="btn btn-success" style="margin-top:20px">Add One-Time Schedule</button>
                 </form>
             </div>
 
-            <div id="onetime-schedules" class="schedule-list"></div>
-        </div>
-
-        <div class="advanced-toggle">
-            <button id="advancedToggle">Advanced: Manual Cron Editing</button>
-        </div>
-
-        <div class="advanced-section" id="advancedSection">
-            <div class="card">
-                <h3 style="margin:0 0 8px 0;font-size:16px">Manual Cron Editing</h3>
-                <p style="margin:0 0 16px 0;font-size:13px;color:var(--muted)">For advanced users: directly edit the
-                    cron file
-                </p>
-                <textarea id="cronText" class="textarea" rows="10"><?= htmlspecialchars($currentCron) ?></textarea>
-                <div style="margin-top:12px;display:flex;gap:10px">
-                    <button class="btn btn-primary" onclick="saveCron()">Save Cron File</button>
-                    <button class="btn btn-secondary" onclick="refreshCron()">Refresh</button>
+            <div id="onetime-schedules" class="schedule-list">
+                @forelse($onetimeJobs as $job)
+                <div class="schedule-item">
+                    <div class="schedule-info">
+                        <div class="schedule-name">
+                            {{ $job->name }}
+                            <span class="schedule-status {{ $job->active ? 'status-active' : 'status-inactive' }}">
+                                {{ $job->active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+                        <div class="schedule-time">{{ $job->scraper_type }} - {{ $job->cron_expression }}</div>
+                    </div>
+                    <div class="schedule-actions">
+                        <form method="POST" action="{{ route('scraper-jobs.toggle', $job->id) }}" style="display:inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-secondary">
+                                {{ $job->active ? 'Deactivate' : 'Activate' }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('scraper-jobs.destroy', $job->id) }}" style="display:inline"
+                            onsubmit="return confirm('Are you sure you want to delete this schedule?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
                 </div>
+                @empty
+                <div class="empty-state">No one-time schedules yet. Add one above for special occasions.</div>
+                @endforelse
             </div>
         </div>
     </div>
 
     <script>
-        const scriptPath = '<?= str_replace('\\', '/', $scriptPath) ?>';
-        const scrapers = <?= json_encode($scrapers) ?>;
-
         function toggleRegularParams(scraper) {
             document.getElementById('regular-params-nfl').style.display = 'none';
             document.getElementById('regular-params-ncaaf').style.display = 'none';
             document.getElementById('regular-params-ncaab').style.display = 'none';
 
-            if (scraper === 'nfl-results-scraper.php') {
+            if (scraper === 'nfl-results') {
                 document.getElementById('regular-params-nfl').style.display = 'block';
-            } else if (scraper === 'ncaaf-results-scraper.php') {
+            } else if (scraper === 'ncaaf-results') {
                 document.getElementById('regular-params-ncaaf').style.display = 'block';
-            } else if (scraper === 'ncaab-results-scraper.php') {
+            } else if (scraper === 'ncaab-results') {
                 document.getElementById('regular-params-ncaab').style.display = 'block';
             }
         }
@@ -687,22 +748,14 @@ for ($y = $currentYear; $y >= 2020; $y--) {
             document.getElementById('onetime-params-ncaaf').style.display = 'none';
             document.getElementById('onetime-params-ncaab').style.display = 'none';
 
-            if (scraper === 'nfl-results-scraper.php') {
+            if (scraper === 'nfl-results') {
                 document.getElementById('onetime-params-nfl').style.display = 'block';
-            } else if (scraper === 'ncaaf-results-scraper.php') {
+            } else if (scraper === 'ncaaf-results') {
                 document.getElementById('onetime-params-ncaaf').style.display = 'block';
-            } else if (scraper === 'ncaab-results-scraper.php') {
+            } else if (scraper === 'ncaab-results') {
                 document.getElementById('onetime-params-ncaab').style.display = 'block';
             }
         }
-
-        console.log('%c=== TIMEZONE INFORMATION ===', 'font-weight: bold; font-size: 14px; color: #3b82f6;');
-        console.log('Server Timezone:', '<?= date_default_timezone_get() ?>');
-        console.log('PHP Timezone:', '<?= date_default_timezone_get() ?>');
-        console.log('Server Current Time:', '<?= date('Y-m-d H:i:s T') ?>');
-        console.log('Browser Timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
-        console.log('Browser Current Time:', new Date().toString());
-        console.log('%c============================', 'font-weight: bold; font-size: 14px; color: #3b82f6;');
 
         document.querySelectorAll('.tab-main').forEach(tab => {
             tab.addEventListener('click', function () {
@@ -712,270 +765,6 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 document.getElementById('panel-' + this.dataset.tab).classList.add('active');
             });
         });
-
-        document.getElementById('advancedToggle').addEventListener('click', function () {
-            document.getElementById('advancedSection').classList.toggle('active');
-            this.textContent = document.getElementById('advancedSection').classList.contains('active')
-                ? 'Hide Advanced Options'
-                : 'Advanced: Manual Cron Editing';
-        });
-
-        function parseCronFile() {
-            const cronText = document.getElementById('cronText').value;
-            const lines = cronText.split('\n').filter(line => line.trim() && !line.trim().startsWith('#'));
-
-            const regular = [];
-            const onetime = [];
-
-            lines.forEach(line => {
-                const parts = line.trim().split(/\s+/);
-                if (parts.length >= 6) {
-                    const [min, hour, dom, month, dow, ...cmdParts] = parts;
-                    const cmd = cmdParts.join(' ');
-
-                    const scraperMatch = cmd.match(/([a-z-]+\.php)/i);
-                    if (!scraperMatch) return;
-
-                    const scraperFile = scraperMatch[1];
-                    const scraperName = scrapers[scraperFile] || scraperFile;
-
-                    if (dom !== '*' && month !== '*') {
-                        onetime.push({
-                            scraper: scraperFile,
-                            name: scraperName,
-                            time: `${hour.padStart(2, '0')}:${min.padStart(2, '0')}`,
-                            date: `${month.padStart(2, '0')}-${dom.padStart(2, '0')}`,
-                            line: line
-                        });
-                    } else if (dom === '*' && month === '*') {
-                        const dayName = dow === '*' ? 'Every Day' :
-                            dow === '0' ? 'Sunday' :
-                                dow === '1' ? 'Monday' :
-                                    dow === '2' ? 'Tuesday' :
-                                        dow === '3' ? 'Wednesday' :
-                                            dow === '4' ? 'Thursday' :
-                                                dow === '5' ? 'Friday' : 'Saturday';
-
-                        regular.push({
-                            scraper: scraperFile,
-                            name: scraperName,
-                            time: `${hour.padStart(2, '0')}:${min.padStart(2, '0')}`,
-                            day: dayName,
-                            line: line
-                        });
-                    }
-                }
-            });
-
-            return { regular, onetime };
-        }
-
-        function renderSchedules() {
-            const { regular, onetime } = parseCronFile();
-
-            const regularDiv = document.getElementById('regular-schedules');
-            const onetimeDiv = document.getElementById('onetime-schedules');
-
-            if (regular.length === 0) {
-                regularDiv.innerHTML = '<div class="empty-state">No weekly schedules yet. Add one above to get started.</div>';
-            } else {
-                regularDiv.innerHTML = regular.map(item => `
-      <div class="schedule-item">
-        <div class="schedule-info">
-          <div class="schedule-name">${item.name}</div>
-          <div class="schedule-time">${item.day} at ${item.time}</div>
-        </div>
-        <div class="schedule-actions">
-          <button class="btn btn-danger" onclick="deleteSchedule('${item.line.replace(/'/g, "\\'")}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
-            }
-
-            if (onetime.length === 0) {
-                onetimeDiv.innerHTML = '<div class="empty-state">No one-time schedules yet. Add one above for special occasions.</div>';
-            } else {
-                onetimeDiv.innerHTML = onetime.map(item => `
-      <div class="schedule-item">
-        <div class="schedule-info">
-          <div class="schedule-name">${item.name}</div>
-          <div class="schedule-time">${item.date} at ${item.time}</div>
-        </div>
-        <div class="schedule-actions">
-          <button class="btn btn-secondary" onclick="rescheduleNextMonth('${item.line.replace(/'/g, "\\'")}')">Reschedule Next Month</button>
-          <button class="btn btn-danger" onclick="deleteSchedule('${item.line.replace(/'/g, "\\'")}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
-            }
-        }
-
-        function deleteSchedule(line) {
-            const cronBox = document.getElementById('cronText');
-            const lines = cronBox.value.split('\n');
-            const filtered = lines.filter(l => l.trim() !== line.trim());
-            cronBox.value = filtered.join('\n');
-            saveCronAndRefresh();
-        }
-
-        function rescheduleNextMonth(line) {
-            const parts = line.trim().split(/\s+/);
-            if (parts.length >= 6) {
-                let [min, hour, dom, month, dow, ...cmdParts] = parts;
-
-                let newMonth = parseInt(month) + 1;
-                let newYear = new Date().getFullYear();
-
-                if (newMonth > 12) {
-                    newMonth = 1;
-                }
-
-                const newLine = `${min} ${hour} ${dom} ${newMonth} ${dow} ${cmdParts.join(' ')}`;
-
-                deleteSchedule(line);
-
-                const cronBox = document.getElementById('cronText');
-                const currentValue = cronBox.value.trim();
-                cronBox.value = currentValue ? currentValue + '\n' + newLine : newLine;
-
-                saveCronAndRefresh();
-            }
-        }
-
-        document.getElementById('regularForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const scraper = document.getElementById('regular-scraper').value;
-            const time = document.getElementById('regular-time').value;
-            const day = document.getElementById('regular-day').value;
-
-            if (!scraper || !time) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            const [hour, min] = time.split(':');
-            let command = `php ${scriptPath}${scraper}`;
-
-            if (scraper === 'nfl-results-scraper.php') {
-                const year = document.getElementById('regular-nfl-year').value;
-                const week = document.getElementById('regular-nfl-week').value;
-                command += ` year=${year} week=${week}`;
-            } else if (scraper === 'ncaaf-results-scraper.php') {
-                const year = document.getElementById('regular-ncaaf-year').value;
-                const week = document.getElementById('regular-ncaaf-week').value;
-                command += ` year=${year} week=${week}`;
-            } else if (scraper === 'ncaab-results-scraper.php') {
-                const date = document.getElementById('regular-ncaab-date').value;
-                if (date) {
-                    command += ` date=${date}`;
-                }
-            }
-
-            const line = `${parseInt(min)} ${parseInt(hour)} * * ${day} ${command}`;
-
-            const cronBox = document.getElementById('cronText');
-            const currentValue = cronBox.value.trim();
-            cronBox.value = currentValue ? currentValue + '\n' + line : line;
-
-            saveCronAndRefresh();
-            this.reset();
-            document.getElementById('regular-time').value = '09:00';
-            toggleRegularParams('');
-        });
-
-        document.getElementById('onetimeForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const scraper = document.getElementById('onetime-scraper').value;
-            const date = document.getElementById('onetime-date').value;
-            const time = document.getElementById('onetime-time').value;
-
-            if (!scraper || !date || !time) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            const [year, month, dom] = date.split('-');
-            const [hour, min] = time.split(':');
-            let command = `php ${scriptPath}${scraper}`;
-
-            if (scraper === 'nfl-results-scraper.php') {
-                const nflYear = document.getElementById('onetime-nfl-year').value;
-                const nflWeek = document.getElementById('onetime-nfl-week').value;
-                command += ` year=${nflYear} week=${nflWeek}`;
-            } else if (scraper === 'ncaaf-results-scraper.php') {
-                const ncaafYear = document.getElementById('onetime-ncaaf-year').value;
-                const ncaafWeek = document.getElementById('onetime-ncaaf-week').value;
-                command += ` year=${ncaafYear} week=${ncaafWeek}`;
-            } else if (scraper === 'ncaab-results-scraper.php') {
-                const ncaabDate = document.getElementById('onetime-ncaab-date').value;
-                if (ncaabDate) {
-                    command += ` date=${ncaabDate}`;
-                }
-            }
-
-            const line = `${parseInt(min)} ${parseInt(hour)} ${parseInt(dom)} ${parseInt(month)} * ${command}`;
-
-            const cronBox = document.getElementById('cronText');
-            const currentValue = cronBox.value.trim();
-            cronBox.value = currentValue ? currentValue + '\n' + line : line;
-
-            saveCronAndRefresh();
-            this.reset();
-            document.getElementById('onetime-time').value = '09:00';
-            toggleOnetimeParams('');
-        });
-
-        function saveCronAndRefresh() {
-            let data = new FormData();
-            data.append("cron", document.getElementById("cronText").value);
-
-            fetch("save.php", { method: "POST", body: data })
-                .then(r => {
-                    if (!r.ok) {
-                        throw new Error('Save failed with status: ' + r.status);
-                    }
-                    return r.text();
-                })
-                .then(t => {
-                    console.log('Save response:', t);
-                    if (t.includes('Error') || t.includes('FAILED')) {
-                        alert("Save failed:\n" + t);
-                    } else {
-                        // Reload page to get fresh data from server
-                        setTimeout(() => location.reload(), 500);
-                    }
-                })
-                .catch(err => {
-                    alert("Error saving: " + err);
-                    console.error('Save error:', err);
-                });
-        }
-
-        function saveCron() {
-            let data = new FormData();
-            data.append("cron", document.getElementById("cronText").value);
-
-            fetch("save.php", { method: "POST", body: data })
-                .then(r => r.text())
-                .then(t => {
-                    alert("Cron file saved successfully!");
-                    renderSchedules();
-                })
-                .catch(err => {
-                    alert("Error saving: " + err);
-                });
-        }
-
-        function refreshCron() {
-            location.reload();
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        // document.getElementById('onetime-date').setAttribute('min', today);
-
-        renderSchedules();
     </script>
 </body>
 
