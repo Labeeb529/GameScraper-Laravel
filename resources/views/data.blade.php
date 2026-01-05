@@ -269,6 +269,52 @@
             }
         }
 
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            animation: alertSlideIn 0.3s ease-out;
+        }
+
+        @keyframes alertSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-icon {
+            font-weight: 700;
+            font-family: monospace;
+            flex-shrink: 0;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: rgba(34, 197, 94, 1);
+        }
+
+        .alert-warning {
+            background: rgba(251, 191, 36, 0.12);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: rgba(251, 191, 36, 1);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: rgba(239, 68, 68, 1);
+        }
+
         .pagination-wrapper {
             margin-top: 24px;
             display: flex;
@@ -499,6 +545,8 @@
                 NCAAB Results
             </a>
         </div>
+
+        @include('partials.alerts')
 
         @if(collect($groupedData)->isEmpty())
             <div class="table-container">
