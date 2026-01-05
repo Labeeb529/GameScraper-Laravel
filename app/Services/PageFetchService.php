@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Services;
+
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PageFetchService
 {
@@ -17,12 +19,19 @@ class PageFetchService
 
             if ($response->successful()) {
                 $body = $response->body();
-                return !empty($body) ? $body : null;
+                if (empty($body)) {
+                    throw new Exception('Empty response body from ' . $url);
+                }
+                return $body;
             }
 
-            return null;
+            throw new Exception('HTTP request failed with status ' . $response->status() . ' for URL: ' . $url);
+        } catch (Exception $e) {
+            Log::error('PageFetchService error: ' . $e->getMessage());
+            throw $e;
         } catch (\Throwable $e) {
-            return null;
+            Log::error('PageFetchService error: ' . $e->getMessage());
+            throw new Exception('Failed to fetch page: ' . $e->getMessage());
         }
     }
 }

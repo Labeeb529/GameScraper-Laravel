@@ -801,7 +801,9 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 const seasonStart = new Date(selectedYear, 8, 4);
                 const today = new Date();
                 const daysDiff = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
-                maxWeek = Math.min(18, Math.floor(daysDiff / 7) + 1);
+                if (daysDiff >= 0) {
+                    maxWeek = Math.min(18, Math.floor(daysDiff / 7) + 1);
+                }
             }
 
             for (let w = 1; w <= maxWeek; w++) {
@@ -856,7 +858,9 @@ for ($y = $currentYear; $y >= 2020; $y--) {
                 const seasonStart = new Date(selectedYear, 7, 30);
                 const today = new Date();
                 const daysDiff = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
-                maxWeek = Math.min(15, Math.floor(daysDiff / 7) + 1);
+                if (daysDiff >= 0) {
+                    maxWeek = Math.min(15, Math.floor(daysDiff / 7) + 1);
+                }
             }
 
             for (let w = 1; w <= maxWeek; w++) {
