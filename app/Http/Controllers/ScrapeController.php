@@ -10,6 +10,7 @@ class ScrapeController extends Controller
 {
     public function scrapeBets(Request $request, ScrapingService $scrapingService)
     {
+        dd($request, 'Request Failed.');
         try {
             $gameValue = $request['game'] ?? '';
             
@@ -38,6 +39,7 @@ class ScrapeController extends Controller
 
     public function scrapeResults(Request $request, ScrapingService $scrapingService)
     {
+        dd($request, 'Request Failed.');
         try {
             $gameValue = $request['game'] ?? '';
             
