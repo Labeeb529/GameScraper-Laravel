@@ -10,10 +10,9 @@ class ScrapeController extends Controller
 {
     public function scrapeBets(Request $request, ScrapingService $scrapingService)
     {
-        dd($request, 'Request Failed.');
         try {
             $gameValue = $request['game'] ?? '';
-            
+
             if (empty($gameValue)) {
                 return redirect()->back()->with('error', 'Game parameter is required');
             }
@@ -39,10 +38,9 @@ class ScrapeController extends Controller
 
     public function scrapeResults(Request $request, ScrapingService $scrapingService)
     {
-        dd($request, 'Request Failed.');
         try {
             $gameValue = $request['game'] ?? '';
-            
+
             if (empty($gameValue)) {
                 return redirect()->back()->with('error', 'Game parameter is required');
             }
