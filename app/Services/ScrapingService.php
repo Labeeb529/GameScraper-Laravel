@@ -34,6 +34,7 @@ class ScrapingService
 
             $page = $this->pageFetchService->fetchPageContent($url);
 
+            dd($page);
             if (empty($page)) {
                 $this->indexService->finish();
                 return 0;
