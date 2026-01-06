@@ -37,3 +37,7 @@ Route::get('/data/export/download/{file}', [DataController::class, 'downloadExpo
 
 Route::get('/data/indices', [DataController::class, 'getIndices'])
     ->name('data.indices');
+
+Route::get('/test', function () {
+    return 'Testing';
+});
