@@ -32,6 +32,7 @@ class ScrapeController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'An error occurred while scraping: ' . $e->getMessage());
         }
+        dd($e, 'Request Failed.');
     }
 
 
@@ -75,5 +76,6 @@ class ScrapeController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'An error occurred while scraping: ' . $e->getMessage());
         }
+        dd($e, 'Request Failed.');
     }
 }
